@@ -17,7 +17,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Recording from "../components/Recording";
 // import NoRecordings from "../components/NoRecordings";
 import NoRecordings from "../components/NoRecordings";
-import { getAllData, signOutUser, uploadToFirebaseStorage, uploadToFirestore } from "../firebaseDB";
+import { getUserRecordings, signOutUser, uploadToFirebaseStorage, uploadToFirestore } from "../firebaseDB";
 
 export default function HomeScreen(props) {
   const [recording, setRecording] = useState();
@@ -31,7 +31,7 @@ export default function HomeScreen(props) {
   useEffect(() => {
     const fetchData = async () => {
       // Access Firestore collection and fetch data
-      getAllData(user.email)
+      getUserRecordings(user.email)
       .then((data) => {
         //   console.log('data',data);
           setRecordings(data)
@@ -126,8 +126,8 @@ export default function HomeScreen(props) {
       const today = new Date();
 
       const recordingObject = {
-        title: `Recording ${recordings.length + 1}`,
-        date: `${today.getDay()}-${today.getMonth()}-${today.getFullYear()}`,
+        title: `Recording ${formattedDateTitle(today)}`,
+        date: `${today.getDate().toString().padStart(2, '0')}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getFullYear()}`,
         duration: convertSecondsToMinutes(timer),
         file: recording.getURI(),
       };
@@ -170,6 +170,17 @@ export default function HomeScreen(props) {
     );
   }
 
+  function formattedDateTitle(date) {
+    let year = date.getFullYear();
+    let month = (date.getMonth() + 1).toString().padStart(2, '0');
+    let day = date.getDate().toString().padStart(2, '0');
+    let hours = date.getHours().toString().padStart(2, '0');
+    let minutes = date.getMinutes().toString().padStart(2, '0');
+    let seconds = date.getSeconds().toString().padStart(2, '0');
+  
+    return `${year}${month}${day}_${hours}${minutes}${seconds}`;
+  }
+  
   const handleSignOut = () => {
     signOutUser().then(() => {
         console.log("Sign out");
