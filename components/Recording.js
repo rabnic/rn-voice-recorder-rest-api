@@ -141,8 +141,8 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         gap: 10,
-        borderTopWidth: 2,
-        borderColor: '#333333',
+        // borderTopWidth: 2,
+        // borderColor: '#333333',
     },
 
     recordingDetailsContainer: {

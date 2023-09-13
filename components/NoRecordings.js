@@ -18,8 +18,6 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        borderTopColor: '#515151',
-        borderTopWidth: 1,
     },
     text: {
         color: '#b2b1b1',

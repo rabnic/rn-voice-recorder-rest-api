@@ -4,13 +4,14 @@ import { getAuth, updateProfile, createUserWithEmailAndPassword, signInWithEmail
 // import { getReactNativePersistence } from "firebase/auth/react-native"
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from 'expo-secure-store';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyDGEwwRCLdRXYLhMYgrCkh-67beRw31i-U",
   authDomain: "voice-recorder-84355.firebaseapp.com",
   projectId: "voice-recorder-84355",
-  storageBucket: "voice-recorder-84355.appspot.com",
+  storageBucket: " ",
   messagingSenderId: "823767307506",
   appId: "1:823767307506:web:5f2b93939e7b1b296dec6b",
 };
@@ -58,9 +59,11 @@ export const signInUserWithEmailAndPassword = async (email, password) => {
     body: JSON.stringify(payload)
   })
     .then(response => response.json())
-    .then(data => {
+    .then(async token => {
       // Handle the response data here
-      console.log(data);
+      console.log(token);
+      await SecureStore.setItemAsync('authToken', JSON.stringify(token));
+      // throw new Error('Stop here');
     })
     .catch(error => {
       // Handle any errors here
@@ -92,31 +95,50 @@ export const signOutUser = async () => {
 }
 // dribble, awwwards, mobbing, framer, ux toast ================================
 export const registerUser = async (user) => {
-  try {
-    // Add a new document in collection "users"
-    console.log('trying to register', user.email)
-    await setDoc(doc(db, 'users', user.email), user)
-      .then(async () => {
-        console.log("User registered");
-        await AsyncStorage.setItem('user', JSON.stringify({ email: user.email }));
-      }).catch((error) => {
-        console.log(error);
-      });
-  } catch (e) {
-    console.error("Error adding user document: ", e);
+  console.log('user', user);
+  const url = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/(default)/documents/${USERS}/?documentId=${user.email}`;
+  const firebaseDocumentStructure = {
+    fields: {
+      fullName: { stringValue: user.fullName },
+      email: { stringValue: user.email }
+    }
   }
+  fetch(url, { method: 'POST', body: JSON.stringify(firebaseDocumentStructure) })
+    .then(response => response.json())
+    .then(async user => {
+      await AsyncStorage.setItem('user', JSON.stringify({ email: user.email }));
+      console.log(user)
+    })
+    .catch(err => console.log('Failed to add user', err))
+  // try {
+  //   // Add a new document in collection "users"
+  //   console.log('trying to register', user.email)
+  //   await setDoc(doc(db, 'users', user.email), user)
+  //     .then(async () => {
+  //       console.log("User registered");
+  //       await AsyncStorage.setItem('user', JSON.stringify({ email: user.email }));
+  //     }).catch((error) => {
+  //       console.log(error);
+  //     });
+  // } catch (e) {
+  //   console.error("Error adding user document: ", e);
+  // }
 }
 
-export const getUser = async (email) => {
-  const userDocRef = doc(db, 'users', email);
-  const docSnap = await getDoc(userDocRef);
-  if (docSnap.exists()) {
-    // console.log("Document data:", docSnap.data());
-    return docSnap.data();
-  } else {
-    console.log("No such document!");
-    return null;
-  }
+export const getUser = async (userEmail) => {
+  const url = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/(default)/documents/${USERS}/${userEmail}`;
+
+  return await fetch(url)
+    .then(response => response.json())
+    .then(user => {
+      const normalObjectStructure = {
+        email: user.fields.email.stringValue,
+        fullName: user.fields.fullName.stringValue
+      }
+      console.log(normalObjectStructure);
+      return normalObjectStructure;
+    })
+    .catch(error => console.log('Error getting user document: ', error))
 };
 
 export const getUserRecordings = async (userEmail) => {
@@ -126,8 +148,10 @@ export const getUserRecordings = async (userEmail) => {
   await fetch(url)
     .then(response => response.json())
     .then(data => {
-      recordingsData = data.documents.map((recordingData) => {
+      // If there is no recordings collection return empty array
+      if (Object.keys(data).length < 1) return recordingsData;
 
+      recordingsData = data.documents.map((recordingData) => {
         const normalObjectStructure = {
           date: recordingData.fields.date.stringValue,
           duration: recordingData.fields.duration.stringValue,
@@ -231,44 +255,61 @@ export const uploadToFirebaseStorage = async (userEmail, recording) => {
     if (blob) {
 
       // Set the Firebase Storage upload URL
-      const storageUrl = `https://firebasestorage.googleapis.com/v0/b/${firebaseConfig.storageBucket}/o/${userEmail}/${recording.title}.${recording.file.includes('blob') ? 'webm' : fileType}`;
+      // const storageUrl = `https://firebasestorage.googleapis.com/v0/b/${firebaseConfig.storageBucket}/o/${userEmail}/${recording.title}.${recording.file.includes('blob') ? 'webm' : fileType}:addFirebase`;
+      const storageUrl = `https://firebasestorage.googleapis.com/v1beta/${firebaseConfig.storageBucket}/${userEmail}/o?uploadType=media&name=${recording.title}.${recording.file.includes('blob') ? 'webm' : fileType}`;
 
-      // Set the filename and path for the audio file in Firebase Storage
-      const filename = 'audio.wav'; // Change this to your desired filename
-      const path = `audio/${filename}`; // Change the 'audio/' prefix to your desired directory path
+      // const uploadAudioToFirebase = (blob) => {
+      //   const url = 'https://firebasestorage.googleapis.com/v1beta/bucket-name.appspot.com/o?uploadType=media&name=file-name.m4a'; // Replace with your bucket name and desired file name
 
-      // Set the request body
-      const body = {
-        name: path,
-        contentType: 'audio/wav',
-      };
+      //   fetch(url, {
+      //     method: 'POST',
+      //     body: blob,
+      //     headers: {
+      //       'Content-Type': 'audio/m4a',
+      //       'Authorization': 'Bearer YOUR_FIREBASE_AUTH_TOKEN' // Replace with your Firebase authentication token
+      //     }
+      //   })
+      //   .then(response => {
+      //     if (!response.ok) {
+      //       throw new Error('Network response was not ok');
+      //     }
+      //     return response.json();
+      //   })
+      //   .then(data => {
+      //     console.log('File uploaded successfully:', data);
+      //   })
+      //   .catch(error => {
+      //     console.error('Error uploading file:', error);
+      //   });
+      // };
+
 
       // Make the API request with the Fetch API
-      fetch(`${storageUrl}?uploadType=media`, {
+      fetch(`${storageUrl}`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer {YOUR_FIREBASE_AUTH_TOKEN}', // Replace with your Firebase authentication token
+          'Content-Type': `audio/${recording.file.includes('blob') ? 'webm' : fileType}`,
+          //   // Authorization: 'Bearer {YOUR_FIREBASE_AUTH_TOKEN}', // Replace with your Firebase authentication token
         },
-        body: JSON.stringify(body),
+        body: blob,
       })
         .then(response => {
           if (response.ok) {
             console.log('Audio file uploaded successfully!');
           } else {
-            console.error('Error uploading audio file:', response.statusText);
+            console.error('Error uploading audio file:', response.status);
           }
         })
         .catch(error => {
-          console.error('Error uploading audio file:', error);
+          console.error('Caught::Error uploading audio file:', error);
         });
 
       //====
-      const storageRef = ref(storage, `${userEmail}/${recording.title}.${recording.file.includes('blob') ? 'webm' : fileType}`);
-      await uploadBytes(storageRef, blob, { contentType: `audio/${recording.file.includes('blob') ? 'webm' : fileType}` });
-      const downloadUrl = await getDownloadURL(storageRef);
+      // const storageRef = ref(storage, `${userEmail}/${recording.title}.${recording.file.includes('blob') ? 'webm' : fileType}`);
+      // await uploadBytes(storageRef, blob, { contentType: `audio/${recording.file.includes('blob') ? 'webm' : fileType}` });
+      // const downloadUrl = await getDownloadURL(storageRef);
       // console.log("Recording uploaded to Firebase Storage.");
-      return downloadUrl;
+      return `downloadUrl`;
     }
   } catch (error) {
     console.error("Error uploading recording to Firebase:", error);

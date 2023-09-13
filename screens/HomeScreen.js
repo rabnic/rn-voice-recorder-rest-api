@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Text,
   View,
+  ScrollView,
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
@@ -26,19 +27,19 @@ export default function HomeScreen(props) {
   const [timer, setTimer] = useState(0);
   const [user, setUser] = useState(props.extraData)
   const intervalRef = useRef(null);
-//   console.log('route props', props.extraData)
+  //   console.log('route props', props.extraData)
 
   useEffect(() => {
     const fetchData = async () => {
       // Access Firestore collection and fetch data
       getUserRecordings(user.email)
-      .then((data) => {
-        //   console.log('data',data);
+        .then((data) => {
+          console.log('data', data);
           setRecordings(data)
-       }).catch((error) => { 
-        console.log(error); 
-      })
-    // console.log('route props', user)
+        }).catch((error) => {
+          console.log(error);
+        })
+      // console.log('route props', user)
     };
 
     fetchData();
@@ -88,7 +89,7 @@ export default function HomeScreen(props) {
         "recordings",
         JSON.stringify(parsedRecordings)
       );
-    //   console.log("Recording saved to AsyncStorage successfully");
+      //   console.log("Recording saved to AsyncStorage successfully");
     } catch (error) {
       console.error("Failed to save recording to AsyncStorage:", error);
     }
@@ -131,14 +132,14 @@ export default function HomeScreen(props) {
         duration: convertSecondsToMinutes(timer),
         file: recording.getURI(),
       };
-    //   console.log("uri", recording.getURI());
+      //   console.log("uri", recording.getURI());
       await saveRecordingToAsyncStorage(recordingObject);
 
-      await uploadToFirebaseStorage(user.email,recordingObject)
-        .then( async (response) => {
-        //   console.log("response", response);
+      await uploadToFirebaseStorage(user.email, recordingObject)
+        .then(async (response) => {
+          //   console.log("response", response);
           // recordingObject.file = response
-          await uploadToFirestore(user.email,{ ...recordingObject, file: response })
+          await uploadToFirestore(user.email, { ...recordingObject, file: response })
             .then((docId) => {
               setRecordings((prevRecordings) => {
                 return [{ ...recordingObject, id: docId }, ...prevRecordings];
@@ -177,84 +178,88 @@ export default function HomeScreen(props) {
     let hours = date.getHours().toString().padStart(2, '0');
     let minutes = date.getMinutes().toString().padStart(2, '0');
     let seconds = date.getSeconds().toString().padStart(2, '0');
-  
+
     return `${year}${month}${day}_${hours}${minutes}${seconds}`;
   }
-  
+
   const handleSignOut = () => {
     signOutUser().then(() => {
-        console.log("Sign out");
-        setRecordings(null);
-        setUser(null)
-        props.navigation.navigate('Login');
+      console.log("Sign out");
+      setRecordings(null);
+      setUser(null)
+      props.navigation.navigate('Login');
 
     })
   }
 
   return (
-    
-      <View style={styles.innerContainer}>
-        <View style={styles.headerContainer}>
-          <Text
-            style={[
-              styles.timer,
-              { color: isRecording ? "#ffffff" : "#b2b1b1" },
-            ]}
-          >
-            {convertSecondsToMinutes(timer)}
-          </Text>
-          {/* <Button title="Sign Out" onPress={handleSignOut} /> */}
-          <TouchableOpacity onPress={handleSignOut}>
-          <AntDesign name="logout" size={26} color="#E94A47" style={{position: 'relative', top: -5, right: 10,}}/>
-          </TouchableOpacity>
-        </View>
 
-        <View style={styles.recordContainer}>
-          <TouchableOpacity
-            onPress={isRecording ? stopRecording : startRecording}
-          >
-            <View style={styles.recordButtonContainer}>
-              <View style={styles.recordButton}>
-                <Text style={styles.recordButtonText}>
-                  {isRecording ? (
+    <View style={styles.innerContainer}>
+      <View style={styles.headerContainer}>
+        <Text
+          style={[
+            styles.timer,
+            { color: isRecording ? "#ffffff" : "#b2b1b1" },
+          ]}
+        >
+          {convertSecondsToMinutes(timer)}
+        </Text>
+        <TouchableOpacity onPress={handleSignOut}>
+          <AntDesign name="logout" size={26} color="#E94A47" style={{ position: 'relative', top: -5, right: 10, }} />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.recordContainer}>
+        <TouchableOpacity
+          onPress={isRecording ? stopRecording : startRecording}
+        >
+          <View style={styles.recordButtonContainer}>
+            <View style={styles.recordButton}>
+              <Text style={styles.recordButtonText}>
+                {isRecording ? (
+                  <>
                     <FontAwesome
                       name="microphone-slash"
                       size={52}
                       color="white"
                     />
-                  ) : (
-                    <FontAwesome name="microphone" size={52} color="white" />
-                  )}
-                </Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-          {/* <Text>uploading to cloud ... <ActivityIndicator color="#50CAB2"/></Text> */}
-        </View>
+                    <ActivityIndicator color="#50CAB2" size='large' style={{ transform: [{ scaleX: 2 }, { scaleY: 2 }] }} />
+                  </>
+                ) : (
+                  <>
 
-        <View style={styles.recordingsContainer}>
-          {recordings && recordings.length > 0 ? (
-            // <FlatList
-            //   data={recordings}
-            //   keyExtractor={(item, index) => `key-${index}`}
-              
-            //   renderItem={({ item }) => <Recording recording={item} setRecordings={setRecordings} userEmail={user.email}/>}
-            // />
-            
-                recordings.map((item) => {
-                    return (<Recording recording={item} key={item.id} setRecordings={setRecordings} userEmail={user.email}/>)
-                })
-            
-          ) : (
-            <NoRecordings />
-          )}
-        </View>
+                    <FontAwesome name="microphone" size={52} color="white" />
+                  </>
+                )}
+              </Text>
+            </View>
+          </View>
+        </TouchableOpacity>
       </View>
+
+      <ScrollView contentContainerStyle={styles.recordingsContainer}>
+        {recordings && recordings.length > 0 ? (
+          // <FlatList
+          //   data={recordings}
+          //   keyExtractor={(item, index) => `key-${index}`}
+
+          //   renderItem={({ item }) => <Recording recording={item} setRecordings={setRecordings} userEmail={user.email}/>}
+          // />
+
+          recordings?.map((item) => {
+            return (<Recording recording={item} key={item.id} setRecordings={setRecordings} userEmail={user.email} />)
+          })
+
+        ) : (
+          <NoRecordings />
+        )}
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
- 
+
   innerContainer: {
     flex: 1,
     width: "100%",
@@ -276,6 +281,8 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    borderBottomColor: '#515151',
+    borderBottomWidth: 1,
   },
   recordButtonContainer: {
     width: 250,
@@ -320,5 +327,8 @@ const styles = StyleSheet.create({
   },
   recordingsContainer: {
     flex: 1,
+
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
