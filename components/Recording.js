@@ -167,14 +167,15 @@ export default Recording;
 const styles = StyleSheet.create({
   recordingContainer: {
     padding: 15,
-    width: "100%",
+    flex: 1,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    alignSelf: "flex-start",
+
     gap: 10,
+
     // borderTopWidth: 2,
-    // borderColor: '#333333',
+    borderWidth: 0.5,
   },
 
   recordingDetailsContainer: {

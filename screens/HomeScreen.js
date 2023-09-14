@@ -24,11 +24,13 @@ import {
   uploadToFirebaseStorage,
   uploadToFirestore,
 } from "../restApiServices";
-import { useUserContext } from "../App";
+import { useAuth } from "../context/userAuthContext";
 
 export default function HomeScreen({ navigation }) {
-  const { user, refreshUserAuthState } = useUserContext();
+  // const { user, refreshUserAuthState } = useUserContext();
   // console.log("User in Home ====", useUserContext());
+  const { user, setUser } = useAuth();
+
   const [recording, setRecording] = useState();
   const [recordings, setRecordings] = useState([]);
   const [isRecording, setIsRecording] = useState(false);
@@ -46,9 +48,9 @@ export default function HomeScreen({ navigation }) {
           setRecordings(data);
         })
         .catch((error) => {
-          console.log('Error getting recordings',error);
+          console.log("Error getting recordings", error);
         });
-      console.log('Home user ====', user)
+      console.log("Home user ====", user);
     };
 
     fetchData();
@@ -142,7 +144,7 @@ export default function HomeScreen({ navigation }) {
         .then(async (response) => {
           console.log("response", response);
           console.log("user.email", user.email);
-          recordingObject.file = response
+          recordingObject.file = response;
           await uploadToFirestore(user.email, {
             ...recordingObject,
             file: response,
@@ -190,13 +192,10 @@ export default function HomeScreen({ navigation }) {
   }
 
   const handleSignOut = () => {
-    console.log("pressed");
-
+    console.log(">>>  SignOut");
     signOutUser().then(() => {
-      console.log("Sign out");
       setRecordings(null);
-      refreshUserAuthState()
-      navigation.navigate("Login");
+      setUser(null);
     });
   };
 
@@ -248,8 +247,26 @@ export default function HomeScreen({ navigation }) {
           </View>
         </TouchableOpacity>
       </View>
+      <View style={styles.recordingsContainer}>
+        {recordings && recordings.length > 0 ? (
+          <FlatList
+            data={recordings}
+            style={{ flex: 1 }}
+            keyExtractor={(item, index) => `key-${index}`}
+            renderItem={({ item }) => (
+              <Recording
+                recording={item}
+                setRecordings={setRecordings}
+                userEmail={user.email}
+              />
+            )}
+          />
+        ) : (
+          <NoRecordings />
+        )}
+      </View>
 
-      <ScrollView contentContainerStyle={styles.recordingsContainer}>
+      {/* <ScrollView contentContainerStyle={styles.recordingsContainer}>
         {recordings && recordings.length > 0 ? (
           // <FlatList
           //   data={recordings}
@@ -271,7 +288,7 @@ export default function HomeScreen({ navigation }) {
         ) : (
           <NoRecordings />
         )}
-      </ScrollView>
+      </ScrollView> */}
     </View>
   );
 }
@@ -279,8 +296,7 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   innerContainer: {
     flex: 1,
-    width: "100%",
-    height: "100%",
+
     // marginHorizontal: 20,
   },
   headerContainer: {
@@ -345,7 +361,5 @@ const styles = StyleSheet.create({
   recordingsContainer: {
     flex: 1,
     flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
   },
 });

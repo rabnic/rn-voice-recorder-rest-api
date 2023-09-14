@@ -12,18 +12,23 @@ import {
   Image,
   TextInput,
   Pressable,
+  ScrollView,
+  Dimensions,
 } from "react-native";
 import { registerUser, signUpWithEmailAndPassword } from "../restApiServices";
-import { useUserContext } from "../App";
+import { useAuth } from "../context/userAuthContext";
 
+const { height } = Dimensions.get("screen");
 
 export default function RegisterScreen({ navigation }) {
-  const { refreshUserAuthState } = useUserContext();
+  const { setUser } = useAuth();
+
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleSignUp = () => {
+    console.log(">>>  Register");
     signUpWithEmailAndPassword(email.toLowerCase().trim(), password).then(
       async () => {
         await registerUser({
@@ -31,117 +36,123 @@ export default function RegisterScreen({ navigation }) {
           email: email.toLowerCase().trim(),
         }).then(() => {
           console.log("Registered yahaaaaaa");
-          refreshUserAuthState().then(() => {
-            navigation.navigate("Home");
-          });
+          setUser({ email, fullName });
         });
       }
     );
   };
 
   return (
-    <View style={styles.innerContainer}>
-      <View style={styles.headerContainer}>
-        <View style={styles.logoContainer}>
-          <FontAwesome5
-            name="microphone-alt"
-            style={styles.logo}
-            size={130}
-            color="rgb(246,32,69)"
-          />
+    <View style={styles.container}>
+      <ScrollView
+        style={styles.innerContainer}
+        contentContainerStyle={{
+          flexDirection: "column",
+        }}
+      >
+        <View style={styles.headerContainer}>
+          <View style={styles.logoContainer}>
+            <FontAwesome5
+              name="microphone-alt"
+              style={styles.logo}
+              size={130}
+              color="rgb(246,32,69)"
+            />
+          </View>
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.headerText}>Register</Text>
+          </View>
         </View>
-        <View style={styles.headerTextContainer}>
-          <Text style={styles.headerText}>Register</Text>
-        </View>
-      </View>
 
-      <View style={styles.formContainer}>
-        <View style={styles.innerFormContainer}>
-          <View style={styles.textInputContainer}>
-            <AntDesign name="user" size={24} color="black" />
-            <TextInput
-              style={styles.textInput}
-              placeholder="Full Name"
-              value={fullName}
-              onChangeText={(text) => {
-                setFullName(text);
-              }}
-              inputMode="text"
-            />
-          </View>
-          <View style={styles.textInputContainer}>
-            <AntDesign name="mail" size={24} color="black" />
-            <TextInput
-              style={styles.textInput}
-              placeholder="Email"
-              value={email}
-              onChangeText={(text) => {
-                setEmail(text);
-              }}
-              inputMode="email"
-            />
-          </View>
-          <View style={styles.textInputContainer}>
-            <AntDesign name="lock1" size={24} color="black" />
-            <TextInput
-              style={styles.textInput}
-              placeholder="Password"
-              value={password}
-              onChangeText={(text) => {
-                setPassword(text);
-              }}
-              inputMode="text"
-            />
-          </View>
-          <Pressable style={styles.registerButton} onPress={handleSignUp}>
-            <Text style={styles.registerButtonText}>Sign Up</Text>
-          </Pressable>
-        </View>
-        <View style={styles.thirdpartyContainer}>
-          <View style={styles.orSignUpWithContainer}>
-            <View style={styles.hr}></View>
-            <TextInput style={styles.orSignUpWithText}>
-              {" "}
-              Or Sign Up With
-            </TextInput>
-            <View style={styles.hr}></View>
-          </View>
-          <View style={styles.thirdpartyButtons}>
-            <Pressable style={styles.thirdpartyButton} onPress={() => {}}>
-              <Image source={FacebookLogo} style={styles.thirdPartyLogo} />
-              <Text style={styles.thirdpartyButtonText}>Facebook</Text>
-            </Pressable>
-            <Pressable style={styles.thirdpartyButton} onPress={() => {}}>
-              <Image source={GoogleLogo} style={styles.thirdPartyLogo} />
-              <Text style={styles.thirdpartyButtonText}>Google</Text>
+        <View style={styles.formContainer}>
+          <View style={styles.innerFormContainer}>
+            <View style={styles.textInputContainer}>
+              <AntDesign name="user" size={24} color="black" />
+              <TextInput
+                style={styles.textInput}
+                placeholder="Full Name"
+                value={fullName}
+                onChangeText={(text) => {
+                  setFullName(text);
+                }}
+                inputMode="text"
+              />
+            </View>
+            <View style={styles.textInputContainer}>
+              <AntDesign name="mail" size={24} color="black" />
+              <TextInput
+                style={styles.textInput}
+                placeholder="Email"
+                value={email}
+                onChangeText={(text) => {
+                  setEmail(text);
+                }}
+                inputMode="email"
+              />
+            </View>
+            <View style={styles.textInputContainer}>
+              <AntDesign name="lock1" size={24} color="black" />
+              <TextInput
+                style={styles.textInput}
+                placeholder="Password"
+                value={password}
+                onChangeText={(text) => {
+                  setPassword(text);
+                }}
+                inputMode="text"
+              />
+            </View>
+            <Pressable style={styles.registerButton} onPress={handleSignUp}>
+              <Text style={styles.registerButtonText}>Sign Up</Text>
             </Pressable>
           </View>
-          <View style={styles.textAlreadyUserContainer}>
-            <Text style={styles.textAlreadyUser}>Already a user?</Text>
+          <View style={styles.thirdpartyContainer}>
+            <View style={styles.orSignUpWithContainer}>
+              <View style={styles.hr}></View>
+              <TextInput style={styles.orSignUpWithText}>
+                {" "}
+                Or Sign Up With
+              </TextInput>
+              <View style={styles.hr}></View>
+            </View>
+            <View style={styles.thirdpartyButtons}>
+              <Pressable style={styles.thirdpartyButton} onPress={() => {}}>
+                <Image source={FacebookLogo} style={styles.thirdPartyLogo} />
+                <Text style={styles.thirdpartyButtonText}>Facebook</Text>
+              </Pressable>
+              <Pressable style={styles.thirdpartyButton} onPress={() => {}}>
+                <Image source={GoogleLogo} style={styles.thirdPartyLogo} />
+                <Text style={styles.thirdpartyButtonText}>Google</Text>
+              </Pressable>
+            </View>
+            <View style={styles.textAlreadyUserContainer}>
+              <Text style={styles.textAlreadyUser}>Already a user?</Text>
 
-            <Pressable
-              style={styles.textAlreadyUserLink}
-              onPress={() => navigation.navigate("Login")}
-            >
-              <Text style={styles.textAlreadyUserLinkText}>Sign In</Text>
-            </Pressable>
+              <Pressable
+                style={styles.textAlreadyUserLink}
+                onPress={() => navigation.navigate("Login")}
+              >
+                <Text style={styles.textAlreadyUserLinkText}>Sign In</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
-      </View>
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   innerContainer: {
     flex: 1,
-    width: "100%",
-    height: "100%",
-    // marginHorizontal: 20,
   },
   headerContainer: {
-    marginHorizontal: 20,
+    padding: 30,
     paddingVertical: 10,
+    height: height * 0.3,
     flexDirection: "column",
     flex: 1,
   },
@@ -160,18 +171,20 @@ const styles = StyleSheet.create({
     color: "#cccccc",
   },
   formContainer: {
-    flex: 2,
+    flex: 1,
     flexDirection: "column",
     backgroundColor: "rgb(246,32,69)",
     borderTopRightRadius: 20,
     borderTopLeftRadius: 20,
     padding: 30,
     paddingTop: 50,
+    height: height * 0.65,
   },
   innerFormContainer: {
     width: "100%",
     flex: 1,
-    gap: 10,
+    gap: 25,
+    justifyContent: "space-around",
   },
   textInputContainer: {
     width: "100%",
@@ -212,11 +225,10 @@ const styles = StyleSheet.create({
   },
   thirdpartyContainer: {
     flex: 1,
-    width: "100%",
     flex: 1,
     gap: 10,
     alignItems: "center",
-    justifyContent: "space-around",
+    justifyContent: "space-evenly",
   },
   orSignUpWithContainer: {
     flexDirection: "row",
