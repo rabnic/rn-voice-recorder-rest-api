@@ -1,5 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
+import { initializeApp } from "firebase/app";
+import { getFirestore, doc, setDoc, updateDoc, deleteDoc, addDoc, getDocs, collection, initializeFirestore, getDoc } from "firebase/firestore";
+import { getAuth, updateProfile, createUserWithEmailAndPassword, signInWithEmailAndPassword, initializeAuth, getReactNativePersistence, signOut } from "firebase/auth";
+// import { getReactNativePersistence } from "firebase/auth/react-native"
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+
 
 // Your web app's Firebase configuration
 export const firebaseConfig = {
@@ -10,6 +16,12 @@ export const firebaseConfig = {
   messagingSenderId: "823767307506",
   appId: "1:823767307506:web:5f2b93939e7b1b296dec6b",
 };
+
+// Initialize Firebase
+export const app = initializeApp(firebaseConfig);
+// const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
 const RECORDINGS = "recordings";
 const USERS = "users";
@@ -56,13 +68,44 @@ export const validateToken = async () => {
 };
 
 export const signUpWithEmailAndPassword = async (email, password) => {
-  createUserWithEmailAndPassword(auth, email, password)
-    .then(() => {
-      console.log("User signed in successfully");
+
+  const url = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${firebaseConfig.apiKey}`;
+
+  const headers = {
+    "Content-Type": "application/json",
+  };
+
+  const payload = {
+    email,
+    password,
+    returnSecureToken: true,
+  };
+
+  fetch(url, {
+    method: "POST",
+    headers: headers,
+    body: JSON.stringify(payload),
+  })
+    .then((response) => response.json())
+    .then(async (token) => {
+      // Handle the response data here
+      console.log(token);
+      await SecureStore.setItemAsync("authToken", JSON.stringify(token));
+      console.log('after securestore');
+      // throw new Error('Stop here');
     })
     .catch((error) => {
-      console.log("SignIn Error =", error);
+      // Handle any errors here
+      console.error('Error signing up',error);
     });
+
+  // createUserWithEmailAndPassword(auth, email, password)
+  //   .then(() => {
+  //     console.log("User signed in successfully");
+  //   })
+  //   .catch((error) => {
+  //     console.log("SignIn Error =", error);
+  //   });
 };
 
 export const signInUserWithEmailAndPassword = async (email, password) => {
@@ -88,6 +131,7 @@ export const signInUserWithEmailAndPassword = async (email, password) => {
       // Handle the response data here
       console.log(token);
       await SecureStore.setItemAsync("authToken", JSON.stringify(token));
+      console.log('after securestore');
       // throw new Error('Stop here');
     })
     .catch((error) => {
@@ -179,7 +223,11 @@ export const getUserRecordings = async (userEmail) => {
   const url = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/(default)/documents/${USERS}/${userEmail}/${RECORDINGS}`;
   let recordingsData = [];
 
-  await fetch(url)
+  await fetch(url,{
+    // headers: {
+    //   authorization: `Bearer ${getIdToken()}`,
+    // },
+  })
     .then((response) => response.json())
     .then((data) => {
       // If there is no recordings collection return empty array
@@ -210,6 +258,9 @@ export const deleteRecording = async (userEmail, id) => {
 
   fetch(url, {
     method: "DELETE",
+    headers: {
+      authorization: `Bearer ${getIdToken()}`,
+    },
   })
     .then((response) => {
       // Check if the request was successful (status code 200-299)
@@ -224,10 +275,10 @@ export const updateRecording = async (id, userEmail, newTitle) => {
   const url = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/(default)/documents/${USERS}/${userEmail}/${RECORDINGS}/${id}?currentDocument.exists=true&updateMask.fieldPaths=title&alt=json`;
 
   fetch(url, {
-    // headers: {
-    //   authorization: "Bearer [ACCESS_TOKEN]",
-    //   "content-type": "application/json",
-    // },
+    headers: {
+      authorization: `Bearer ${getIdToken()}`,
+      "content-type": "application/json",
+    },
     body: JSON.stringify({ fields: { title: { stringValue: newTitle } } }),
     method: "PATCH",
   })
@@ -252,10 +303,14 @@ export const uploadToFirestore = async (userEmail, recording) => {
       file: { stringValue: recording.file },
     },
   };
-
+  console.log('inside uploadToFirestore');
   fetch(url, {
     method: "POST",
     body: JSON.stringify(firebaseDocumentStructure),
+    headers: {
+      authorization: `Bearer ${getIdToken()}`,
+      "content-type": "application/json",
+    },
   })
     .then((response) => response.json())
     .then((data) => {
@@ -271,9 +326,10 @@ export const uploadToFirestore = async (userEmail, recording) => {
 export const uploadToFirebaseStorage = async (userEmail, recording) => {
   // try {
   let fileType = "";
+  console.log('uploadToFirebaseStorage before fetchAudio');
   const blob = await fetchAudioFile(recording.file)
     .then((audioFile) => {
-      // console.log("i have audio", audioFile);
+      console.log("i have audio", audioFile);
       const uriParts = recording.file.split(".");
       fileType = uriParts[uriParts.length - 1];
 
@@ -287,35 +343,34 @@ export const uploadToFirebaseStorage = async (userEmail, recording) => {
   if (blob) {
     // Set the Firebase Storage upload URL
     // const storageUrl = `https://firebasestorage.googleapis.com/v0/b/${firebaseConfig.storageBucket}/o/${userEmail}/${recording.title}.${recording.file.includes('blob') ? 'webm' : fileType}:addFirebase`;
-    const storageUrl = `https://firebasestorage.googleapis.com/v1beta/${
-      firebaseConfig.storageBucket
-    }/${userEmail}/o?uploadType=media&name=${recording.title}.${
-      recording.file.includes("blob") ? "webm" : fileType
-    }`;
-    console.log("before uploadBlobToFirebase");
-    await uploadBlobToFirebase(userEmail, blob, recording, fileType).then(
-      (res) => console.log("res", res)
-    );
-    throw new Error("Stopppppp");
+    // const storageUrl = `https://firebasestorage.googleapis.com/v1beta/${
+    //   firebaseConfig.storageBucket
+    // }/${userEmail}/o?uploadType=media&name=${recording.title}.${
+    //   recording.file.includes("blob") ? "webm" : fileType
+    // }`;
+    // console.log("before uploadBlobToFirebase");
+    // await uploadBlobToFirebase(userEmail, blob, recording, fileType).then(
+    //   (res) => console.log("res", res)
+    // );
+    // throw new Error("Stopppppp");
     //====
-    // const storageRef = ref(storage, `${userEmail}/${recording.title}.${recording.file.includes('blob') ? 'webm' : fileType}`);
-    // await uploadBytes(storageRef, blob, { contentType: `audio/${recording.file.includes('blob') ? 'webm' : fileType}` });
-    // const downloadUrl = await getDownloadURL(storageRef);
-    // console.log("Recording uploaded to Firebase Storage.");
-    return `downloadUrl`;
+    const storageRef = ref(storage, `${userEmail}/${recording.title}.${recording.file.includes('blob') ? 'webm' : fileType}`);
+    await uploadBytes(storageRef, blob, { contentType: `audio/${recording.file.includes('blob') ? 'webm' : fileType}` });
+    const downloadUrl = await getDownloadURL(storageRef);
+    console.log("Recording uploaded to Firebase Storage.", downloadUrl);
+    return downloadUrl;
   }
   // } catch (error) {
   //   console.error("Error uploading recording to Firebase:", error);
   // }
 };
 
-const uploadBlobToFirebase = (userEmail, blob, recording, fileType) => {
-  const storageUrl = `https://firebasestorage.googleapis.com/v0/b/${
-    firebaseConfig.storageBucket
-  }.appspot.com/o/${encodeURIComponent(userEmail)}`;
-  const fileName = `${recording.title}.${
-    recording.file.includes("blob") ? "webm" : fileType
-  }`;
+// Function causes network request error //
+const uploadBlobToFirebase = async (userEmail, blob, recording, fileType) => {
+  const storageUrl = `https://firebasestorage.googleapis.com/v0/b/${firebaseConfig.storageBucket
+    }.appspot.com/o/${encodeURIComponent(userEmail)}`;
+  const fileName = `${recording.title}.${recording.file.includes("blob") ? "webm" : fileType
+    }`;
 
   const formData = new FormData();
   formData.append("file", blob, fileName);
@@ -345,11 +400,11 @@ const fetchAudioFile = (uri) => {
 
     xhr.onload = () => {
       console.log("status =", xhr.status);
-      if (xhr.status === 0 || xhr.status === 200) {
-        console.log(xhr.response);
+      if (xhr.status == 0 || xhr.status == 200) {
+        console.log('xhr.response==', xhr.response);
         resolve(xhr.response);
       } else {
-        reject(new Error(xhr.statusText));
+        reject(new Error('Rejected--', xhr.statusText));
       }
     };
 
@@ -360,3 +415,8 @@ const fetchAudioFile = (uri) => {
     xhr.send(null);
   });
 };
+
+const getIdToken = () => {
+  const token = SecureStore.getItemAsync('authToken');
+  return JSON.parse(token).idToken;
+}

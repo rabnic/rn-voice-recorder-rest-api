@@ -14,8 +14,11 @@ import {
   Pressable,
 } from "react-native";
 import { registerUser, signUpWithEmailAndPassword } from "../restApiServices";
+import { useUserContext } from "../App";
+
 
 export default function RegisterScreen({ navigation }) {
+  const { refreshUserAuthState } = useUserContext();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,8 +31,10 @@ export default function RegisterScreen({ navigation }) {
           email: email.toLowerCase().trim(),
         }).then(() => {
           console.log("Registered yahaaaaaa");
+          refreshUserAuthState().then(() => {
+            navigation.navigate("Home");
+          });
         });
-        navigation.navigate("Home");
       }
     );
   };

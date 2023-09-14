@@ -19,7 +19,7 @@ export const useUserContext = () => {
 export default function App() {
   const { width, height } = useWindowDimensions();
   const [user, setUser] = useState(null);
-  const [authStateChanged, setAuthStateChanged] = useState(false);
+  let isLoading = false
 
   useEffect(() => {
     validateToken()
@@ -38,11 +38,29 @@ export default function App() {
           console.log("Token has expired or is invalid");
           setUser(null);
         }
+        if (isLoading) {
+          isLoading = false;
+        }
       })
       .catch((error) => {
         console.error("Error checking token validity", error);
       });
   }, []);
+
+  const refreshUserAuthState = async () => {
+    console.log('Refreshing user');
+    let token = await SecureStore.getItemAsync("authToken");
+    console.log('token >>>>>', token);
+    if (token === null) {
+      setUser(null);
+      return;
+    }
+
+    token = JSON.parse(token);
+    await getUser(token.email).then((_user) => {
+      setUser({..._user});
+    });
+  }
 
   // useEffect(() => {
   //   const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -82,57 +100,15 @@ export default function App() {
       }}
     >
       <StatusBar animated={true} style={"light"} />
-      <UserContext.Provider value={{ user, setUser }}>
-        <NavigationContainer theme={navTheme} screenProps={{ user: user }}>
-          <Stack.Navigator
-            initialRouteName="Home"
-            screenOptions={{
-              headerShown: false,
-              animation: "slide_from_bottom",
-            }}
-          >
-            <Stack.Screen
-              name="Home"
-              component={user === null ? LoginScreen : HomeScreen}
-            />
-            {/* <Stack.Screen name="Home">
-            {(props) =>
-              user !== null ? (
-                <HomeScreen {...props} extraData={user} />
-              ) : (
-                <LoginScreen {...props} extraData={setAuthStateChanged} />
-              )
-            }
-          </Stack.Screen> */}
-            <Stack.Screen
-              name="Login"
-              component={user === null ? LoginScreen : HomeScreen}
-            />
+      <UserContext.Provider value={{ user, refreshUserAuthState }}>
+        <NavigationContainer theme={navTheme}>
 
-            {/* <Stack.Screen name="Login">
-            {(props) =>
-              user === null ? (
-                <LoginScreen {...props} extraData={setAuthStateChanged} />
-              ) : (
-                <HomeScreen {...props} extraData={user} />
-              )
-            }
-          </Stack.Screen> */}
-            <Stack.Screen
-              name="Register"
-              component={user === null ? RegisterScreen : HomeScreen}
-            />
-
-            {/* <Stack.Screen name="Register">
-            {(props) =>
-              user === null ? (
-                <RegisterScreen {...props} extraData={setAuthStateChanged} />
-              ) : (
-                <HomeScreen {...props} extraData={user} />
-              )
-            }
-          </Stack.Screen> */}
+          <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false, animation: "slide_from_bottom", }} >
+            <Stack.Screen name="Home" component={user === null ? LoginScreen : HomeScreen} />
+            <Stack.Screen name="Login" component={user === null ? LoginScreen : HomeScreen} />
+            <Stack.Screen name="Register" component={user === null ? RegisterScreen : HomeScreen} />
           </Stack.Navigator>
+
         </NavigationContainer>
       </UserContext.Provider>
     </ScrollView>

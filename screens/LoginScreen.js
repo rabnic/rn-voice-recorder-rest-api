@@ -16,21 +16,28 @@ import FacebookLogo from "../assets/facebook.png";
 import GoogleLogo from "../assets/google.png";
 import { signInUserWithEmailAndPassword } from "../restApiServices";
 import { useUserContext } from "../App";
+import * as SecureStore from "expo-secure-store";
 
-export default function LoginScreen({ navigation, extraData }) {
-  const { user, setUser } = useUserContext();
+
+export default function LoginScreen({ navigation }) {
+  const { refreshUserAuthState } = useUserContext();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const setAuthStateChanged = extraData;
 
   const handleSignIn = async () => {
     setIsLoading(true);
     await signInUserWithEmailAndPassword(email.toLowerCase().trim(), password)
-      .then(() => {
-        setUser(null);
-        navigation.navigate("Home");
+      .then(async () => {
+        // setUser(null);
+        // await SecureStore.getItemAsync("authToken").then(token => {
+        //   console.log('in login --', token);
+          
+        // });
+        await refreshUserAuthState().then(() => {
+            navigation.navigate("Home");
+          });
       })
       .finally(() => {
         // setIsLoading(false);
@@ -61,6 +68,7 @@ export default function LoginScreen({ navigation, extraData }) {
               placeholder="Email"
               value={email}
               onChangeText={(text) => setEmail(text)}
+              inputMode="email"
             />
           </View>
           <View style={styles.textInputContainer}>
@@ -92,11 +100,11 @@ export default function LoginScreen({ navigation, extraData }) {
             <View style={styles.hr}></View>
           </View>
           <View style={styles.thirdpartyButtons}>
-            <Pressable style={styles.thirdpartyButton} onPress={() => {}}>
+            <Pressable style={styles.thirdpartyButton} onPress={() => { }}>
               <Image source={FacebookLogo} style={styles.thirdPartyLogo} />
               <Text style={styles.thirdpartyButtonText}>Facebook</Text>
             </Pressable>
-            <Pressable style={styles.thirdpartyButton} onPress={() => {}}>
+            <Pressable style={styles.thirdpartyButton} onPress={() => { }}>
               <Image source={GoogleLogo} style={styles.thirdPartyLogo} />
               <Text style={styles.thirdpartyButtonText}>Google</Text>
             </Pressable>

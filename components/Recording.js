@@ -36,7 +36,7 @@ const Recording = ({ recording, setRecordings, userEmail }) => {
 
   const play = async () => {
     setIsPlaying(true);
-    console.log("Loading Sound", audioUri);
+    // console.log("Loading Sound", audioUri);
     // if(!sound) {
     const { sound } = await Audio.Sound.createAsync({ uri: audioUri });
     setSound(sound);
@@ -50,7 +50,7 @@ const Recording = ({ recording, setRecordings, userEmail }) => {
 
     sound && (await sound.pauseAsync());
     // sound && await sound.unloadAsync();
-    console.log(sound);
+    // console.log(sound);
     setIsPlaying(false);
     // setSound(null);
   };
@@ -79,7 +79,7 @@ const Recording = ({ recording, setRecordings, userEmail }) => {
       <View style={styles.playButtonContainer}>
         <TouchableOpacity onPress={isPlaying ? pause : play}>
           {isPlaying ? (
-            <Ionicons name="pause-circle-outline" size={44} color="#b2b1b1" />
+            <Ionicons name="stop-circle-outline" size={44} color="#b2b1b1" />
           ) : (
             <Ionicons name="play-circle-outline" size={44} color="#b2b1b1" />
           )}
@@ -171,6 +171,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    alignSelf: "flex-start",
     gap: 10,
     // borderTopWidth: 2,
     // borderColor: '#333333',

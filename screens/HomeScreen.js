@@ -27,8 +27,8 @@ import {
 import { useUserContext } from "../App";
 
 export default function HomeScreen({ navigation }) {
-  const { user, setUser } = useUserContext();
-  console.log("User in Home ====", useUserContext());
+  const { user, refreshUserAuthState } = useUserContext();
+  // console.log("User in Home ====", useUserContext());
   const [recording, setRecording] = useState();
   const [recordings, setRecordings] = useState([]);
   const [isRecording, setIsRecording] = useState(false);
@@ -46,9 +46,9 @@ export default function HomeScreen({ navigation }) {
           setRecordings(data);
         })
         .catch((error) => {
-          console.log(error);
+          console.log('Error getting recordings',error);
         });
-      // console.log('route props', user)
+      console.log('Home user ====', user)
     };
 
     fetchData();
@@ -141,19 +141,20 @@ export default function HomeScreen({ navigation }) {
       await uploadToFirebaseStorage(user.email, recordingObject)
         .then(async (response) => {
           console.log("response", response);
-          // recordingObject.file = response
-          // await uploadToFirestore(user.email, {
-          //   ...recordingObject,
-          //   file: response,
-          // })
-          //   .then((docId) => {
-          //     setRecordings((prevRecordings) => {
-          //       return [{ ...recordingObject, id: docId }, ...prevRecordings];
-          //     });
-          //   })
-          //   .catch((err) => {
-          //     console.log("error adding doc", err);
-          //   });
+          console.log("user.email", user.email);
+          recordingObject.file = response
+          await uploadToFirestore(user.email, {
+            ...recordingObject,
+            file: response,
+          })
+            .then((docId) => {
+              setRecordings((prevRecordings) => {
+                return [{ ...recordingObject, id: docId }, ...prevRecordings];
+              });
+            })
+            .catch((err) => {
+              console.log("error adding doc", err);
+            });
         })
         .catch((error) => {
           console.log(error);
@@ -194,7 +195,7 @@ export default function HomeScreen({ navigation }) {
     signOutUser().then(() => {
       console.log("Sign out");
       setRecordings(null);
-      setUser(null);
+      refreshUserAuthState()
       navigation.navigate("Login");
     });
   };
@@ -231,11 +232,11 @@ export default function HomeScreen({ navigation }) {
                       size={52}
                       color="white"
                     />
-                    <ActivityIndicator
+                    {/* <ActivityIndicator
                       color="#50CAB2"
                       size="large"
                       style={{ transform: [{ scaleX: 2 }, { scaleY: 2 }] }}
-                    />
+                    /> */}
                   </>
                 ) : (
                   <>
@@ -343,7 +344,7 @@ const styles = StyleSheet.create({
   },
   recordingsContainer: {
     flex: 1,
-
+    flexDirection: "column",
     justifyContent: "center",
     alignItems: "center",
   },
