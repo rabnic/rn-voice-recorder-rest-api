@@ -31,10 +31,12 @@ export default function LoginScreen({ navigation }) {
   const handleSignIn = async () => {
     console.log(">>>  Login");
     setIsLoading(true);
+    // setUser({email:"rabalaond@gmail.com", fullName:""});
+
     await signInUserWithEmailAndPassword(email.toLowerCase().trim(), password)
       .then((user) => {
         console.log("signed in---setUser", user);
-        setUser(user);
+        setUser({email:email.toLowerCase().trim(), fullName:""});
         setIsLoading(false);
       })
       .catch((error) => {

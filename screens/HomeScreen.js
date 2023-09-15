@@ -6,7 +6,6 @@ import {
   StyleSheet,
   Text,
   View,
-  ScrollView,
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
@@ -14,9 +13,7 @@ import {
 import { Audio } from "expo-av";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// import Recording from "../components/Recording";
 import Recording from "../components/Recording";
-// import NoRecordings from "../components/NoRecordings";
 import NoRecordings from "../components/NoRecordings";
 import {
   getUserRecordings,
@@ -27,20 +24,18 @@ import {
 import { useAuth } from "../context/userAuthContext";
 
 export default function HomeScreen({ navigation }) {
-  // const { user, refreshUserAuthState } = useUserContext();
-  // console.log("User in Home ====", useUserContext());
+
   const { user, setUser } = useAuth();
 
   const [recording, setRecording] = useState();
   const [recordings, setRecordings] = useState([]);
   const [isRecording, setIsRecording] = useState(false);
   const [timer, setTimer] = useState(0);
-  // const [user, setUser] = useState(props.extraData);
   const intervalRef = useRef(null);
-  // console.log("route props", props.extraData);
 
   useEffect(() => {
-    const fetchData = async () => {
+    console.log("Home user ====", user);
+    const unsubscribe = navigation.addListener('focus', () => {
       // Access Firestore collection and fetch data
       getUserRecordings(user.email)
         .then((data) => {
@@ -50,11 +45,10 @@ export default function HomeScreen({ navigation }) {
         .catch((error) => {
           console.log("Error getting recordings", error);
         });
-      console.log("Home user ====", user);
-    };
+    });
 
-    fetchData();
-  }, []);
+    return unsubscribe;
+  }, [navigation]);
 
   const recordingSettings = {
     android: {

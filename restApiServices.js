@@ -1,22 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
 import { initializeApp } from "firebase/app";
-import {
-  getFirestore,
-  doc,
-  setDoc,
-  updateDoc,
-  deleteDoc,
-  addDoc,
-  getDocs,
-  collection,
-  initializeFirestore,
-  getDoc,
-} from "firebase/firestore";
-// import { getReactNativePersistence } from "firebase/auth/react-native"
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
-// Your web app's Firebase configuration
 export const firebaseConfig = {
   apiKey: "AIzaSyDGEwwRCLdRXYLhMYgrCkh-67beRw31i-U",
   authDomain: "voice-recorder-84355.firebaseapp.com",
@@ -26,14 +12,38 @@ export const firebaseConfig = {
   appId: "1:823767307506:web:5f2b93939e7b1b296dec6b",
 };
 
+
 // Initialize Firebase
 export const app = initializeApp(firebaseConfig);
-// const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
 const storage = getStorage(app);
 
 const RECORDINGS = "recordings";
 const USERS = "users";
+
+export const getRandomPassword = async () => {
+  const url = `https://www.psswrd.net/api/v1/password/`
+  return await fetch(url)
+  .then((response) => response.json())
+}
+
+export const refreshToken = async (refreshToken) => {
+  const url = `https://securetoken.googleapis.com/v1/token?key=${firebaseConfig.apiKey}`
+  await fetch(url, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/x-www-form-urlencoded'
+  },
+  body: `grant_type=refresh_token&refresh_token=${refreshToken}`
+})
+  .then(response => response.json())
+  .then(data => {
+    // console.log('Refresh token==',data);
+  })
+  .catch(error => {
+    console.error('Refresh token Error==',error);
+  });
+
+}
 
 export const validateToken = async () => {
   console.log("Trying to validate");
@@ -68,7 +78,7 @@ export const validateToken = async () => {
 
       if (expirationTimeSeconds > now) {
         // Token is still valid
-        return { isValid: true, userEmail: user.email };
+        return { isValid: true, userEmail: user.email, refreshToken: token.refreshToken };
       }
     }
   }
@@ -127,8 +137,8 @@ export const signInUserWithEmailAndPassword = async (email, password) => {
     .then(async (token) => {
       console.log(token);
       await SecureStore.setItemAsync("authToken", JSON.stringify(token));
-      console.log("after securestore");
-      return { email: email, fullName: "" };
+      console.log("after securestore", email);
+      // return email;
       // throw new Error('Stop here');
     })
     .catch((error) => {
@@ -218,6 +228,7 @@ export const getUserRecordings = async (userEmail) => {
   })
     .then((response) => response.json())
     .then((data) => {
+      console.log('raw data', data);
       // If there is no recordings collection return empty array
       if (Object.keys(data).length < 1) return recordingsData;
 
@@ -419,8 +430,9 @@ const getIdToken = () => {
   SecureStore.getItemAsync("authToken").then((token) => {
     if (!token) return null;
     token = JSON.parse(token);
+    console.log(token);
     return token?.idToken;
   });
 };
-console.log(getIdToken());
-console.log(getIdToken());
+getIdToken();
+

@@ -11,11 +11,11 @@ import {
   View,
   Image,
   TextInput,
-  Pressable,
+  TouchableOpacity,
   ScrollView,
   Dimensions,
 } from "react-native";
-import { registerUser, signUpWithEmailAndPassword } from "../restApiServices";
+import { registerUser, signUpWithEmailAndPassword, getRandomPassword } from "../restApiServices";
 import { useAuth } from "../context/userAuthContext";
 
 const { height } = Dimensions.get("screen");
@@ -26,6 +26,7 @@ export default function RegisterScreen({ navigation }) {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showRandomPassword, setShowRandomPassword] = useState(false);
 
   const handleSignUp = () => {
     console.log(">>>  Register");
@@ -41,6 +42,13 @@ export default function RegisterScreen({ navigation }) {
       }
     );
   };
+
+  const handleRandomPassword = () => {
+    getRandomPassword()
+    .then(res => {
+      setPassword(res.password)
+    })
+  }
 
   return (
     <View style={styles.container}>
@@ -65,7 +73,7 @@ export default function RegisterScreen({ navigation }) {
         </View>
 
         <View style={styles.formContainer}>
-          <View style={styles.innerFormContainer}>
+          <View style={[styles.innerFormContainer, {flex: showRandomPassword ? 2 : 1 }]}>
             <View style={styles.textInputContainer}>
               <AntDesign name="user" size={24} color="black" />
               <TextInput
@@ -100,11 +108,20 @@ export default function RegisterScreen({ navigation }) {
                   setPassword(text);
                 }}
                 inputMode="text"
+                onFocus={() => setShowRandomPassword(true)}
               />
             </View>
-            <Pressable style={styles.registerButton} onPress={handleSignUp}>
+            {
+              showRandomPassword &&
+              <TouchableOpacity style={styles.randomPassword} onPress={handleRandomPassword}>
+                <FontAwesome5 name="random" size={26} color="rgba(255,255,255,.6)" />
+                <Text style={styles.randomPasswordText}>Random Password?</Text>
+              </TouchableOpacity>
+            }
+
+            <TouchableOpacity style={styles.registerButton} onPress={handleSignUp}>
               <Text style={styles.registerButtonText}>Sign Up</Text>
-            </Pressable>
+            </TouchableOpacity>
           </View>
           <View style={styles.thirdpartyContainer}>
             <View style={styles.orSignUpWithContainer}>
@@ -116,24 +133,24 @@ export default function RegisterScreen({ navigation }) {
               <View style={styles.hr}></View>
             </View>
             <View style={styles.thirdpartyButtons}>
-              <Pressable style={styles.thirdpartyButton} onPress={() => {}}>
+              <TouchableOpacity style={styles.thirdpartyButton} onPress={() => { }}>
                 <Image source={FacebookLogo} style={styles.thirdPartyLogo} />
                 <Text style={styles.thirdpartyButtonText}>Facebook</Text>
-              </Pressable>
-              <Pressable style={styles.thirdpartyButton} onPress={() => {}}>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.thirdpartyButton} onPress={() => { }}>
                 <Image source={GoogleLogo} style={styles.thirdPartyLogo} />
                 <Text style={styles.thirdpartyButtonText}>Google</Text>
-              </Pressable>
+              </TouchableOpacity>
             </View>
             <View style={styles.textAlreadyUserContainer}>
               <Text style={styles.textAlreadyUser}>Already a user?</Text>
 
-              <Pressable
+              <TouchableOpacity
                 style={styles.textAlreadyUserLink}
                 onPress={() => navigation.navigate("Login")}
               >
                 <Text style={styles.textAlreadyUserLinkText}>Sign In</Text>
-              </Pressable>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -183,7 +200,7 @@ const styles = StyleSheet.create({
   innerFormContainer: {
     width: "100%",
     flex: 1,
-    gap: 25,
+    gap: 15,
     justifyContent: "space-around",
   },
   textInputContainer: {
@@ -204,6 +221,18 @@ const styles = StyleSheet.create({
   registerButton: {
     height: 55,
     borderRadius: 50,
+  },
+  randomPassword: {
+    flexDirection: 'row',
+    alignItems: 'center',
+
+    paddingLeft: 20
+  },
+  randomPasswordText: {
+    marginLeft: 10,
+    fontSize: 18,
+    fontWeight: '100',
+    color: 'white'
   },
   registerButton: {
     alignItems: "center",
