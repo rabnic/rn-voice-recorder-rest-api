@@ -17,17 +17,16 @@ const navTheme = {
   },
 };
 
-const Routes = ({userFromValidToken}) => {
+const Routes = ({ userFromValidToken }) => {
   const { user, setUser } = useAuth();
-console.log('User type ==', typeof user)
-console.log('userFromValidToken type ==', typeof userFromValidToken)
+  console.log("User type ==", typeof user);
+  console.log("userFromValidToken type ==", typeof userFromValidToken);
 
   useEffect(() => {
     setUser(userFromValidToken);
-  }, [])
+  }, []);
 
   if (user === undefined) return <SplashScreen />;
-
 
   return (
     <NavigationContainer theme={navTheme}>

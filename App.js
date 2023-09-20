@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, View, useWindowDimensions, } from "react-native";
+import { StyleSheet, View, useWindowDimensions } from "react-native";
 import { validateToken, getUser, refreshToken } from "./restApiServices";
 import { AuthProvider } from "./context/userAuthContext";
 import SplashScreen from "./screens/SplashScreen";
@@ -23,7 +23,7 @@ export default function App() {
           // Token is still valid
           console.log("Token is ", isValid, userEmail);
           await getUser(userEmail).then((user) => {
-            console.log('user is ', user);
+            console.log("user is ", user);
             // setUser(user)
             setUserFromValidToken(user);
           });
@@ -32,11 +32,11 @@ export default function App() {
           console.log("Token has expired or is invalid");
           refreshToken().then(async (token) => {
             await getUser(userEmail).then((user) => {
-              console.log('user is ', user);
+              console.log("user is ", user);
               // setUser(user);
               setUserFromValidToken(user);
             });
-          })
+          });
         } else {
           // User has logged out manually and no token stored
           setUserFromValidToken(null);
@@ -47,7 +47,7 @@ export default function App() {
       });
   }, []);
 
-  if (userFromValidToken === undefined) return <SplashScreen />
+  if (userFromValidToken === undefined) return <SplashScreen />;
 
   return (
     <View
@@ -61,7 +61,6 @@ export default function App() {
       <AuthProvider value>
         <Routes userFromValidToken={userFromValidToken} />
       </AuthProvider>
-
     </View>
   );
 }
@@ -71,5 +70,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "rgb(31,30,31)",
     paddingTop: 50,
+    // position: relative,
   },
 });
