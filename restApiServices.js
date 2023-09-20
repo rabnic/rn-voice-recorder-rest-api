@@ -434,5 +434,5 @@ const getIdToken = () => {
     return token?.idToken;
   });
 };
-getIdToken();
+
 

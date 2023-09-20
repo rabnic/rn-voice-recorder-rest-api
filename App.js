@@ -4,12 +4,14 @@ import { StyleSheet, View, useWindowDimensions, } from "react-native";
 import { validateToken, getUser, refreshToken } from "./restApiServices";
 import { AuthProvider } from "./context/userAuthContext";
 import SplashScreen from "./screens/SplashScreen";
+import { useAuth } from "./context/userAuthContext";
 
 import Routes from "./routes";
 
 export default function App() {
   const { width, height } = useWindowDimensions();
   const [userFromValidToken, setUserFromValidToken] = useState();
+  // const {setUser} = useAuth();
 
   useEffect(() => {
     validateToken()
@@ -22,6 +24,7 @@ export default function App() {
           console.log("Token is ", isValid, userEmail);
           await getUser(userEmail).then((user) => {
             console.log('user is ', user);
+            // setUser(user)
             setUserFromValidToken(user);
           });
         } else if (!isValid && userEmail) {
@@ -30,6 +33,7 @@ export default function App() {
           refreshToken().then(async (token) => {
             await getUser(userEmail).then((user) => {
               console.log('user is ', user);
+              // setUser(user);
               setUserFromValidToken(user);
             });
           })
@@ -54,7 +58,7 @@ export default function App() {
       }}
     >
       <StatusBar animated={true} style={"light"} />
-      <AuthProvider>
+      <AuthProvider value>
         <Routes userFromValidToken={userFromValidToken} />
       </AuthProvider>
 

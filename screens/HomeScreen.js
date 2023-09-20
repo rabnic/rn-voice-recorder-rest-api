@@ -33,18 +33,22 @@ export default function HomeScreen({ navigation }) {
   const [timer, setTimer] = useState(0);
   const intervalRef = useRef(null);
 
+
+
   useEffect(() => {
     console.log("Home user ====", user);
     const unsubscribe = navigation.addListener('focus', () => {
       // Access Firestore collection and fetch data
-      getUserRecordings(user.email)
-        .then((data) => {
-          console.log("data", data);
-          setRecordings(data);
-        })
-        .catch((error) => {
-          console.log("Error getting recordings", error);
-        });
+      if (user) {
+        getUserRecordings(user.email)
+          .then((data) => {
+            // console.log("data", data);
+            setRecordings(data);
+          })
+          .catch((error) => {
+            console.log("Error getting recordings", error);
+          });
+      }
     });
 
     return unsubscribe;

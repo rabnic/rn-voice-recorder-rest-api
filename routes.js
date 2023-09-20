@@ -4,7 +4,8 @@ import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import HomeScreen from "./screens/HomeScreen";
 import RegisterScreen from "./screens/RegisterScreen";
 import LoginScreen from "./screens/LoginScreen";
-import { AuthProvider, useAuth } from "./context/userAuthContext";
+import { useAuth } from "./context/userAuthContext";
+import SplashScreen from "./screens/SplashScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -18,10 +19,14 @@ const navTheme = {
 
 const Routes = ({userFromValidToken}) => {
   const { user, setUser } = useAuth();
+console.log('User type ==', typeof user)
+console.log('userFromValidToken type ==', typeof userFromValidToken)
 
   useEffect(() => {
     setUser(userFromValidToken);
   }, [])
+
+  if (user === undefined) return <SplashScreen />;
 
 
   return (
