@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
-import { initializeApp } from "firebase/app";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+// import { initializeApp } from "firebase/app";
+// import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 export const firebaseConfig = {
   apiKey: "AIzaSyDGEwwRCLdRXYLhMYgrCkh-67beRw31i-U",
@@ -14,8 +14,8 @@ export const firebaseConfig = {
 
 
 // Initialize Firebase
-export const app = initializeApp(firebaseConfig);
-const storage = getStorage(app);
+// export const app = initializeApp(firebaseConfig);
+// const storage = getStorage(app);
 
 const RECORDINGS = "recordings";
 const USERS = "users";
@@ -409,9 +409,7 @@ const fetchAudioFile = (uri) => {
     xhr.responseType = "blob";
 
     xhr.onload = () => {
-      // console.log("status =", xhr.status);
       if (xhr.status == 0 || xhr.status == 200) {
-        // console.log("xhr.response==", xhr.response);
         resolve(xhr.response);
       } else {
         reject(new Error("Rejected--", xhr.statusText));
