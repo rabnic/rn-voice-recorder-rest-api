@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Text,
   View,
+  Alert,
   Image,
   TextInput,
   TouchableOpacity,
@@ -28,17 +29,39 @@ export default function RegisterScreen({ navigation }) {
   const [password, setPassword] = useState("");
   const [showRandomPassword, setShowRandomPassword] = useState(false);
 
+  const alertMessages = {
+    'MISSING_PASSWORD': 'No password entered! \nPlease enter valid password',
+    'WEAK_PASSWORD': 'Weak password entered! \nPassword should be at least 6 characters',
+    'INVALID_EMAIL': 'Invalid email entered! \nPlease enter valid email',
+    'EMPTY_INPUTS': 'Empty inputs received! \nAll input fields are required'
+  }
+
   const handleSignUp = () => {
     console.log(">>>  Register");
+
+    if(fullName.trim().length < 1 || email.trim().length < 1 || password.trim().length < 1) {
+      Alert.alert('Sign Up Error:', alertMessages['EMPTY_INPUTS'], [
+        { text: 'Ok', onPress: () => console.log('Sign In error Ok pressed') },
+      ]);
+      return;
+    }
+
     signUpWithEmailAndPassword(email.toLowerCase().trim(), password).then(
-      async () => {
-        await registerUser({
-          fullName,
-          email: email.toLowerCase().trim(),
-        }).then(() => {
-          console.log("Registered yahaaaaaa");
-          setUser({ email, fullName });
-        });
+      async ( response) => {
+        if (response.status === "success") {
+          await registerUser({
+            fullName,
+            email: email.toLowerCase().trim(),
+          }).then(() => {
+            console.log("Registered yahaaaaaa");
+            setUser({ email, fullName });
+          });
+          setIsLoading(false);
+        } else {
+          Alert.alert('Sign Up Error:', alertMessages[response.message], [
+            { text: 'Ok', onPress: () => console.log('Sign In error Ok pressed') },
+          ]);
+        }
       }
     );
   };

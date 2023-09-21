@@ -19,37 +19,39 @@ const Recording = ({ recording, setRecordings, userEmail }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [audioUri, setAudioUri] = useState(recording.file);
-  const [sound, setSound] = React.useState();
+  const [soundAsync, setSoundAsync] = useState();
   const [titleChangeText, setTitleChangeText] = useState("");
   const [recordingId, setRecordingId] = useState();
   // console.log(recording);
 
   useEffect(() => {
-    return sound
-      ? () => {
-          console.log("Unloading Sound");
+    // return sound
+    //   ? () => {
+    //       console.log("Unloading Sound");
 
-          sound.unloadAsync();
-        }
-      : undefined;
-  }, [sound]);
+    //       sound.unloadAsync();
+    //     }
+    //   : undefined;
+  }, [soundAsync]);
 
   const play = async () => {
     setIsPlaying(true);
     // console.log("Loading Sound", audioUri);
-    // if(!sound) {
+    let _sound;
+    if(!soundAsync) {
     const { sound } = await Audio.Sound.createAsync({ uri: audioUri });
-    setSound(sound);
-    // }
+    _sound = sound;
+    setSoundAsync(sound);
+    }
 
     console.log("Playing Sound");
-    await sound.playAsync();
+    await _sound.playAsync();
   };
   const pause = async () => {
     console.log("Pausing Sound");
 
-    sound && (await sound.pauseAsync());
-    // sound && await sound.unloadAsync();
+    soundAsync && (await soundAsync.pauseAsync());
+    soundAsync && await soundAsync.unloadAsync();
     // console.log(sound);
     setIsPlaying(false);
     // setSound(null);
@@ -58,7 +60,7 @@ const Recording = ({ recording, setRecordings, userEmail }) => {
     setRecordings((prevRecordings) => {
       return prevRecordings.filter((record) => record.id !== recordingId);
     });
-    deleteRecording(userEmail, recordingId);
+    deleteRecording(userEmail, recordingId, audioUri);
     setIsModalVisible(!isModalVisible);
   };
 

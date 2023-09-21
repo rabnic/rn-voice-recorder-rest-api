@@ -23,8 +23,8 @@ const SplashScreen = () => {
         height: height + 50,
       }}
     >
-      <Image source={splashImage} style={{ height: 470, width: 470 }} />
-      {/* <ActivityIndicator size="large" color="#0000ff" /> */}
+      {/* <Image source={splashImage} style={{ height: 470, width: 470 }} /> */}
+      <ActivityIndicator size="large" color="rgb(31,30,31)" style={{ transform: [{ scaleX: 1.5 }, { scaleY: 1.5 }] }}/>
     </View>
   );
 };

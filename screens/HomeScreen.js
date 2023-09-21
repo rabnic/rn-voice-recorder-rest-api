@@ -79,6 +79,7 @@ export default function HomeScreen({ navigation }) {
       bitsPerSecond: 128000,
     },
   };
+  
   async function saveRecordingToAsyncStorage(recordingObject) {
     try {
       const recordings = await AsyncStorage.getItem("recordings");

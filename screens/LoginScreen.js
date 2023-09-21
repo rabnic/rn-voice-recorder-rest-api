@@ -5,6 +5,7 @@ import { FontAwesome5 } from "@expo/vector-icons";
 
 import {
   StyleSheet,
+  Alert,
   Text,
   View,
   ScrollView,
@@ -18,7 +19,6 @@ import FacebookLogo from "../assets/facebook.png";
 import GoogleLogo from "../assets/google.png";
 import { signInUserWithEmailAndPassword } from "../restApiServices";
 import { useAuth } from "../context/userAuthContext";
-import * as SecureStore from "expo-secure-store";
 
 const { height } = Dimensions.get("screen");
 
@@ -28,16 +28,33 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  const alertMessages = {
+    'INVALID_PASSWORD': 'Invalid password entered! \nPlease enter correct password',
+    'INVALID_EMAIL': 'Invalid email entered! \nPlease enter correct email' ,
+  }
+
   const handleSignIn = async () => {
     console.log(">>>  Login");
     setIsLoading(true);
-    // setUser({email:"rabalaond@gmail.com", fullName:""});
+
+    if(email.trim().length < 1 || password.trim().length < 1) {
+      Alert.alert('Sign Up Error:', alertMessages['EMPTY_INPUTS'], [
+        { text: 'Ok', onPress: () => console.log('Sign In error Ok pressed') },
+      ]);
+      return;
+    }
 
     await signInUserWithEmailAndPassword(email.toLowerCase().trim(), password)
-      .then((user) => {
-        console.log("signed in---setUser", user);
-        setUser({email:email.toLowerCase().trim(), fullName:""});
-        setIsLoading(false);
+      .then((response) => {
+        console.log("signed in---", response);
+        if (response.status === "success") {
+          setUser({ email: response.email, fullName: "" });
+          setIsLoading(false);
+        } else {
+          Alert.alert('Sign In Error:', alertMessages[response.message], [
+            { text: 'Ok', onPress: () => console.log('Sign In error Ok pressed') },
+          ]);
+        }
       })
       .catch((error) => {
         setIsLoading(false);
@@ -106,11 +123,11 @@ export default function LoginScreen({ navigation }) {
               <View style={styles.hr}></View>
             </View>
             <View style={styles.thirdpartyButtons}>
-              <Pressable style={styles.thirdpartyButton} onPress={() => {}}>
+              <Pressable style={styles.thirdpartyButton} onPress={() => { }}>
                 <Image source={FacebookLogo} style={styles.thirdPartyLogo} />
                 <Text style={styles.thirdpartyButtonText}>Facebook</Text>
               </Pressable>
-              <Pressable style={styles.thirdpartyButton} onPress={() => {}}>
+              <Pressable style={styles.thirdpartyButton} onPress={() => { }}>
                 <Image source={GoogleLogo} style={styles.thirdPartyLogo} />
                 <Text style={styles.thirdpartyButtonText}>Google</Text>
               </Pressable>
