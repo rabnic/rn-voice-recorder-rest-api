@@ -31,11 +31,12 @@ export default function LoginScreen({ navigation }) {
   const alertMessages = {
     'INVALID_PASSWORD': 'Invalid password entered! \nPlease enter correct password',
     'INVALID_EMAIL': 'Invalid email entered! \nPlease enter correct email' ,
+    'EMPTY_INPUTS': 'Empty inputs received! \nAll input fields are required'
   }
 
   const handleSignIn = async () => {
     console.log(">>>  Login");
-    setIsLoading(true);
+    // setIsLoading(true);
 
     if(email.trim().length < 1 || password.trim().length < 1) {
       Alert.alert('Sign Up Error:', alertMessages['EMPTY_INPUTS'], [
