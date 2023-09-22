@@ -37,7 +37,7 @@ export default function LoginScreen({ navigation }) {
   const handleSignIn = async () => {
     console.log(">>>  Login");
     // setIsLoading(true);
-
+ 
     if(email.trim().length < 1 || password.trim().length < 1) {
       Alert.alert('Sign Up Error:', alertMessages['EMPTY_INPUTS'], [
         { text: 'Ok', onPress: () => console.log('Sign In error Ok pressed') },
